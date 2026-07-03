@@ -187,7 +187,59 @@
     display: flex; flex-direction: column; gap: 12px; align-items: center;
     margin-top: 20px;
   }
-  [data-atlas] { width: 100%; max-width: 560px; }
+  [data-atlas] {
+    position: absolute !important;
+    left: -9999px !important;
+    top: 0 !important;
+    width: 560px !important;
+  }
+  .mp-custom-buttons {
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+    margin-top: 8px;
+  }
+  .mp-btn-yes {
+    display: block;
+    background: linear-gradient(135deg, #F8E5B0 0%, #C9A84C 100%);
+    color: #160E08; font-family: 'Cinzel', serif;
+    font-size: clamp(15px, 2.3vw, 20px); font-weight: 900;
+    padding: 20px 32px; border-radius: 6px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    box-shadow: 0 8px 30px rgba(212,169,61,0.5), 0 0 0 1px rgba(255,245,224,0.5), inset 0 1px 0 rgba(255,255,255,0.45);
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 100%; max-width: 560px;
+    position: relative; overflow: hidden;
+    border: none; cursor: pointer;
+    animation: mpBtnGlow 3.5s ease-in-out infinite;
+    text-align: center;
+  }
+  .mp-btn-yes::before {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: mpBtnShimmer 3s infinite 1.5s;
+    pointer-events: none;
+  }
+  .mp-btn-yes:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 14px 44px rgba(212,169,61,0.7), 0 0 0 1px rgba(255,245,224,0.7), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .mp-btn-yes:disabled { opacity: 0.6; cursor: wait; }
+  .mp-btn-yes-sub {
+    display: block; font-family: 'Lora', serif; font-size: 12px;
+    font-weight: 400; font-style: italic; margin-top: 4px;
+    opacity: 0.9; letter-spacing: 0; color: #1d1408; text-transform: none;
+  }
+  @keyframes mpBtnShimmer { 0% { left: -100%; } 60% { left: 200%; } 100% { left: 200%; } }
+  @keyframes mpBtnGlow {
+    0%, 100% { box-shadow: 0 8px 30px rgba(212,169,61,0.5), 0 0 0 1px rgba(255,245,224,0.4), inset 0 1px 0 rgba(255,255,255,0.25); }
+    50%      { box-shadow: 0 10px 40px rgba(212,169,61,0.7), 0 0 0 1px rgba(255,245,224,0.6), inset 0 1px 0 rgba(255,255,255,0.3); }
+  }
+  .mp-btn-no {
+    display: inline-block;
+    background: transparent; color: #8E7C66;
+    font-family: 'Lora', serif; font-size: 13px;
+    font-style: italic; text-decoration: underline;
+    padding: 10px 16px; border: none; cursor: pointer;
+    transition: color 0.2s; margin-top: 6px;
+  }
+  .mp-btn-no:hover { color: var(--cream); }
 
   @media (max-width: 600px) {
     .container { padding: 36px 16px 40px; }
@@ -334,10 +386,56 @@
     <p class="price-tag">One-time payment · Instant access</p>
 
     <div class="price-cta-wrap">
+      <div class="mp-custom-buttons">
+        <button type="button" class="mp-btn-yes" id="mpYes">
+          ✦ YES — MY ANGEL GUIDED ME HERE, I WANT TO RECEIVE IT ✦
+          <span class="mp-btn-yes-sub">Secure payment · Instant access · Full guarantee</span>
+        </button>
+        <button type="button" class="mp-btn-no" id="mpNo">
+          No, I'm ignoring my angel's calling
+        </button>
+      </div>
       <div data-atlas="1378d3f064ee79d9da5b76a4:7e5b52f326a5078393bf92e8d5f91f8c:95317f07c3dbbd8a338619b5893fc8f6c73001cdcd5a4738248d7190a0774f7db49a0cc842556249cbe2e45d64676ddb71150f88276ea1432668490bb1ff8889af7a550e6c4cc7"></div>
     </div>
   </div>
 </div>
 
+<script>
+  (function() {
+    var btnYes = document.getElementById('mpYes');
+    var btnNo  = document.getElementById('mpNo');
+
+    function triggerAtlas(action) {
+      var tries = 0;
+      function attempt() {
+        var container = document.querySelector('[data-atlas]');
+        if (container) {
+          var btns = container.querySelectorAll('button, a');
+          if (btns.length > 0) {
+            if (action === 'accept') { btns[0].click(); return; }
+            var decline = container.querySelector('[data-action="decline"]') || btns[btns.length - 1];
+            if (decline) { decline.click(); return; }
+          }
+          window.postMessage({ type: 'atlas_oto_action', action: action, _ts: Date.now() }, '*');
+          return;
+        }
+        if (tries++ < 30) setTimeout(attempt, 100);
+      }
+      attempt();
+    }
+
+    if (btnYes) btnYes.addEventListener('click', function() {
+      btnYes.disabled = true;
+      btnYes.innerHTML = '<span class="mp-btn-yes-sub" style="font-size:14px;">Processing...</span>';
+      triggerAtlas('accept');
+    });
+    if (btnNo) btnNo.addEventListener('click', function(e) {
+      e.preventDefault();
+      btnNo.style.opacity = '0.5';
+      btnNo.textContent = 'Redirecting...';
+      triggerAtlas('decline');
+    });
+  })();
+</script>
 </body>
 </html>
