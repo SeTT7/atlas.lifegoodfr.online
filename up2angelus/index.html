@@ -344,23 +344,13 @@
       var tries = 0;
       function attempt() {
         var container = document.querySelector('[data-atlas]');
-        if (container && container.children.length > 0) {
-          var byAttr = container.querySelector('[data-action="' + action + '"]');
-          if (byAttr) { byAttr.click(); return; }
-          var btns = Array.from(container.querySelectorAll('button, a'));
-          if (btns.length > 0) {
-            if (action === 'accept') { btns[0].click(); return; }
-            btns[btns.length - 1].click(); return;
+        if (container) {
+          var btn = container.querySelector(action === 'accept' ? '.atlas-yes' : '.atlas-no');
+          if (!btn) {
+            var btns = container.querySelectorAll('button');
+            if (btns.length > 0) btn = action === 'accept' ? btns[0] : btns[btns.length - 1];
           }
-          var leaves = Array.from(container.querySelectorAll('div, span')).filter(function(el) {
-            return el.children.length === 0 && el.textContent.trim().length > 1;
-          });
-          if (leaves.length > 0) {
-            if (action === 'accept') { leaves[0].click(); return; }
-            leaves[leaves.length - 1].click(); return;
-          }
-          window.postMessage({ type: 'atlas_oto_action', action: action, _ts: Date.now() }, '*');
-          return;
+          if (btn) { btn.click(); return; }
         }
         if (tries++ < 30) setTimeout(attempt, 100);
       }
