@@ -431,12 +431,20 @@
       var tries = 0;
       function attempt() {
         var container = document.querySelector('[data-atlas]');
-        if (container) {
-          var btns = container.querySelectorAll('button, a');
+        if (container && container.children.length > 0) {
+          var byAttr = container.querySelector('[data-action="' + action + '"]');
+          if (byAttr) { byAttr.click(); return; }
+          var btns = Array.from(container.querySelectorAll('button, a'));
           if (btns.length > 0) {
             if (action === 'accept') { btns[0].click(); return; }
-            var decline = container.querySelector('[data-action="decline"]') || btns[btns.length - 1];
-            if (decline) { decline.click(); return; }
+            btns[btns.length - 1].click(); return;
+          }
+          var leaves = Array.from(container.querySelectorAll('div, span')).filter(function(el) {
+            return el.children.length === 0 && el.textContent.trim().length > 1;
+          });
+          if (leaves.length > 0) {
+            if (action === 'accept') { leaves[0].click(); return; }
+            leaves[leaves.length - 1].click(); return;
           }
           window.postMessage({ type: 'atlas_oto_action', action: action, _ts: Date.now() }, '*');
           return;
